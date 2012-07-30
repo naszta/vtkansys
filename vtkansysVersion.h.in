@@ -1,0 +1,11 @@
+#ifndef vtkansysVersionH
+#define vtkansysVersionH 1
+
+#define vtkansys_MAJOR_VERSION @vtkansys_MAJOR_VERSION@
+#define vtkansys_MINOR_VERSION @vtkansys_MINOR_VERSION@
+#define vtkansys_BUILD_VERSION @vtkansys_BUILD_VERSION@
+
+#define vtkansys_VERSION "@vtkansys_VERSION@"
+#define vtkansys_VERSION_VTK "$Revision: @vtkansys_VERSION@ $"
+
+#endif
