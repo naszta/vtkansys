@@ -139,15 +139,15 @@ vtkCxxRevisionMacro(vtkvscAnsysCdbWriter, vtkansys_VERSION_VTK );
 vtkStandardNewMacro(vtkvscAnsysCdbWriter);
 
 vtkvscAnsysCdbWriter::vtkvscAnsysCdbWriter( void )
-: FileName(0), NodeSurfaces(0), ElemSurfaces(0), store(new vtkvscAnsysCdbWriterPrivate), DefaultElementType(0)
+  : FileName(0), NodeSurfaces(0), ElemSurfaces(0), store(new vtkvscAnsysCdbWriterPrivate), DefaultElementType(0)
 {
   this->SetNumberOfInputPorts(1);
-	this->SetNumberOfOutputPorts(0);
+  this->SetNumberOfOutputPorts(0);
 }
 
 vtkvscAnsysCdbWriter::~vtkvscAnsysCdbWriter( void )
 {
-	this->SetFileName(0);
+  this->SetFileName(0);
   this->SetNodeSurfaces(0);
   this->SetElemSurfaces(0);
   if ( this->store != 0 )
@@ -159,13 +159,13 @@ vtkvscAnsysCdbWriter::~vtkvscAnsysCdbWriter( void )
 
 void vtkvscAnsysCdbWriter::PrintSelf(ostream& os, vtkIndent indent)
 {
-	this->Superclass::PrintSelf(os,indent);
+  this->Superclass::PrintSelf(os,indent);
 
-	os << indent << "File Name : ";
-	if( this->FileName == 0 )
-		os << "(none)" << endl;
-	else
-		os << this->FileName << endl;
+  os << indent << "File Name : ";
+  if( this->FileName == 0 )
+    os << "(none)" << endl;
+  else
+    os << this->FileName << endl;
 }
 
 vtkCxxSetObjectMacro(vtkvscAnsysCdbWriter,NodeSurfaces,vtkFieldData);
@@ -173,93 +173,93 @@ vtkCxxSetObjectMacro(vtkvscAnsysCdbWriter,ElemSurfaces,vtkFieldData);
 
 void vtkvscAnsysCdbWriter::WriteData( void )
 {
-	vtkUnstructuredGrid * input = vtkUnstructuredGrid::SafeDownCast( this->GetInput() );
+  vtkUnstructuredGrid * input = vtkUnstructuredGrid::SafeDownCast( this->GetInput() );
 
-	// Description:
-	// Check and prepare input
-	if( input == 0 )
-	{
-		vtkErrorMacro( "Ack!! no input!!" );
-		return;
-	}
+  // Description:
+  // Check and prepare input
+  if( input == 0 )
+  {
+    vtkErrorMacro( "Ack!! no input!!" );
+    return;
+  }
 
   this->store->clear();
 
-	vtkIdType i = 0;
-	input->BuildLinks();
-
-	// Description:
-	// Make and check file
-	vtksys_ios::ofstream FileOut( this->FileName, vtksys_ios::ios_base::out | vtksys_ios::ios_base::trunc );
-	if ( ! FileOut.is_open() )
-	{
-		vtkErrorMacro( "File cannot be created" );
-		return;
-	}
+  vtkIdType i = 0;
+  input->BuildLinks();
 
   // Description:
-	// What will we write out
-	vtkSmartPointer<vtkIdTypeArray> Material = vtkIdTypeArray::SafeDownCast( input->GetCellData()->GetArray( VTKANSYS_MATERIALS_NAME ) );
-	if ( Material == 0 )
-	{
-		Material = vtkSmartPointer<vtkIdTypeArray>::New();
-		Material->SetNumberOfValues( input->GetNumberOfCells() );
-		memset( Material->GetPointer(0), 0, input->GetNumberOfCells() * sizeof(vtkIdType) );
-	}
-	vtkSmartPointer<vtkIdTypeArray> Real = vtkIdTypeArray::SafeDownCast( input->GetCellData()->GetArray( VTKANSYS_REALS_NAME ) );
-	if ( Real == 0 )
-	{
-		Real = vtkSmartPointer<vtkIdTypeArray>::New();
-		Real->SetNumberOfValues( input->GetNumberOfCells() );
-		memset( Real->GetPointer(0), 0, input->GetNumberOfCells() * sizeof(vtkIdType) );
-	}
+  // Make and check file
+  vtksys_ios::ofstream FileOut( this->FileName, vtksys_ios::ios_base::out | vtksys_ios::ios_base::trunc );
+  if ( ! FileOut.is_open() )
+  {
+    vtkErrorMacro( "File cannot be created" );
+    return;
+  }
 
-	FileOut << "/PREP7\n";
+  // Description:
+  // What will we write out
+  vtkSmartPointer<vtkIdTypeArray> Material = vtkIdTypeArray::SafeDownCast( input->GetCellData()->GetArray( VTKANSYS_MATERIALS_NAME ) );
+  if ( Material == 0 )
+  {
+    Material = vtkSmartPointer<vtkIdTypeArray>::New();
+    Material->SetNumberOfValues( input->GetNumberOfCells() );
+    memset( Material->GetPointer(0), 0, input->GetNumberOfCells() * sizeof(vtkIdType) );
+  }
+  vtkSmartPointer<vtkIdTypeArray> Real = vtkIdTypeArray::SafeDownCast( input->GetCellData()->GetArray( VTKANSYS_REALS_NAME ) );
+  if ( Real == 0 )
+  {
+    Real = vtkSmartPointer<vtkIdTypeArray>::New();
+    Real->SetNumberOfValues( input->GetNumberOfCells() );
+    memset( Real->GetPointer(0), 0, input->GetNumberOfCells() * sizeof(vtkIdType) );
+  }
 
-	// Description:
-	// Format the output stream
-	FileOut << vtkstd::setprecision(8) << vtkstd::scientific;
+  FileOut << "/PREP7\n";
 
-	// Description:
-	// Ansys and built in type association
-	this->store->WriteTypes( FileOut );
+  // Description:
+  // Format the output stream
+  FileOut << vtkstd::setprecision(8) << vtkstd::scientific;
 
-	// Description:
-	// Write out points
-	vtkPoints * points = input->GetPoints();
-	double point[3];
+  // Description:
+  // Ansys and built in type association
+  this->store->WriteTypes( FileOut );
 
-	if ( points->GetNumberOfPoints() > 0 )
-	{
-		FileOut << "NBLOCK,6,SOLID\n";
-		FileOut << "(3i8,6e16.9)\n";
-		for ( i = 0; i < points->GetNumberOfPoints(); ++i )
-		{
-			points->GetPoint( i, point );
-			this->WriteNode( FileOut, i, point );
-			FileOut << "\n";
-		}
-		FileOut << "N,R5.3,LOC,     -1,\n";
-	}
+  // Description:
+  // Write out points
+  vtkPoints * points = input->GetPoints();
+  double point[3];
 
-	// Description:
-	// Write out cells
-	int elem_type = 0;
-	vtkCell * cell = 0;
-	if ( input->GetNumberOfCells() > 0 )
-	{
-		FileOut << "EBLOCK,19,SOLID\n";
-		FileOut << "(19i8)\n";
-		for ( i = 0; i < input->GetNumberOfCells(); ++i )
-		{
+  if ( points->GetNumberOfPoints() > 0 )
+  {
+    FileOut << "NBLOCK,6,SOLID\n";
+    FileOut << "(3i8,6e16.9)\n";
+    for ( i = 0; i < points->GetNumberOfPoints(); ++i )
+    {
+      points->GetPoint( i, point );
+      this->WriteNode( FileOut, i, point );
+      FileOut << "\n";
+    }
+    FileOut << "N,R5.3,LOC,     -1,\n";
+  }
+
+  // Description:
+  // Write out cells
+  int elem_type = 0;
+  vtkCell * cell = 0;
+  if ( input->GetNumberOfCells() > 0 )
+  {
+    FileOut << "EBLOCK,19,SOLID\n";
+    FileOut << "(19i8)\n";
+    for ( i = 0; i < input->GetNumberOfCells(); ++i )
+    {
       cell = input->GetCell(i);
       elem_type = this->store->GetElementType( cell->GetCellType(), Material->GetValue(i), this->DefaultElementType );
       this->WriteElem( FileOut, i, cell, Real->GetValue(i), Material->GetValue(i), elem_type );
       FileOut << "\n";
-		}
-		FileOut << "-1\n";
-		FileOut << "EN,R5.5,ATTR,     -1\n";
-	}
+    }
+    FileOut << "-1\n";
+    FileOut << "EN,R5.5,ATTR,     -1\n";
+  }
 
   // Description:
   // Write out user blocks
@@ -268,212 +268,212 @@ void vtkvscAnsysCdbWriter::WriteData( void )
   if ( this->ElemSurfaces != 0 )
     this->WriteBlocks( FileOut, this->ElemSurfaces, ANSYS_ELEM_BLOCK );
 
-	FileOut << "FINISH\n";
+  FileOut << "FINISH\n";
 
-	FileOut.flush();
-	FileOut.close();
+  FileOut.flush();
+  FileOut.close();
 
-	return;
+  return;
 }
 
 int vtkvscAnsysCdbWriter::FillInputPortInformation( int port, vtkInformation * info )
 {
-	info->Set( vtkAlgorithm::INPUT_REQUIRED_DATA_TYPE(), "vtkUnstructuredGrid" );
-	return 1;
+  info->Set( vtkAlgorithm::INPUT_REQUIRED_DATA_TYPE(), "vtkUnstructuredGrid" );
+  return 1;
 }
 
 void vtkvscAnsysCdbWriter::WriteNode( vtksys_ios::ostream &target, vtkIdType index, double * XYZ )
 {
-	IntConverter( target, index + 1 );
-	IntConverter( target, 0 );
-	IntConverter( target, 0 );
-	DoubleConverter( target, XYZ[0] );
-	DoubleConverter( target, XYZ[1] );
-	DoubleConverter( target, XYZ[2] );
+  IntConverter( target, index + 1 );
+  IntConverter( target, 0 );
+  IntConverter( target, 0 );
+  DoubleConverter( target, XYZ[0] );
+  DoubleConverter( target, XYZ[1] );
+  DoubleConverter( target, XYZ[2] );
 }
 
 void vtkvscAnsysCdbWriter::WriteElem( ostream &target, vtkIdType index, vtkCell * cell, int Real, int Material, int Type, int Secnum )
 {
-	switch ( cell->GetCellType() )
-	{
-	case VTK_TETRA :
-		IntConverter( target, Material );
-		IntConverter( target, Type );
-		IntConverter( target, Real );
-		IntConverter( target, 0 );
-		IntConverter( target, 0 );
-		IntConverter( target, 0 );
-		IntConverter( target, 0 );
-		IntConverter( target, 0 );
-		IntConverter( target, 8 );
-		IntConverter( target, 0 );
-		IntConverter( target, index + 1 );
-		IntConverter( target, cell->GetPointId(0) + 1 );
-		IntConverter( target, cell->GetPointId(1) + 1 );
-		IntConverter( target, cell->GetPointId(2) + 1 );
-		IntConverter( target, cell->GetPointId(2) + 1 );
-		IntConverter( target, cell->GetPointId(3) + 1 );
-		IntConverter( target, cell->GetPointId(3) + 1 );
-		IntConverter( target, cell->GetPointId(3) + 1 );
-		IntConverter( target, cell->GetPointId(3) + 1 );
-		break;
-	case VTK_VOXEL :
-		IntConverter( target, Material );
-		IntConverter( target, Type );
-		IntConverter( target, Real );
-		IntConverter( target, 0 );
-		IntConverter( target, 0 );
-		IntConverter( target, 0 );
-		IntConverter( target, 0 );
-		IntConverter( target, 0 );
-		IntConverter( target, 8 );
-		IntConverter( target, 0 );
-		IntConverter( target, index + 1 );
-		IntConverter( target, cell->GetPointId(0) + 1 );
-		IntConverter( target, cell->GetPointId(1) + 1 );
-		IntConverter( target, cell->GetPointId(5) + 1 );
-		IntConverter( target, cell->GetPointId(4) + 1 );
-		IntConverter( target, cell->GetPointId(2) + 1 );
-		IntConverter( target, cell->GetPointId(3) + 1 );
-		IntConverter( target, cell->GetPointId(7) + 1 );
-		IntConverter( target, cell->GetPointId(6) + 1 );
-		break;
-	case VTK_HEXAHEDRON :
-		IntConverter( target, Material );
-		IntConverter( target, Type );
-		IntConverter( target, Real );
-		IntConverter( target, 0 );
-		IntConverter( target, 0 );
-		IntConverter( target, 0 );
-		IntConverter( target, 0 );
-		IntConverter( target, 0 );
-		IntConverter( target, 8 );
-		IntConverter( target, 0 );
-		IntConverter( target, index + 1 );
-		IntConverter( target, cell->GetPointId(0) + 1 );
-		IntConverter( target, cell->GetPointId(1) + 1 );
-		IntConverter( target, cell->GetPointId(2) + 1 );
-		IntConverter( target, cell->GetPointId(3) + 1 );
-		IntConverter( target, cell->GetPointId(4) + 1 );
-		IntConverter( target, cell->GetPointId(5) + 1 );
-		IntConverter( target, cell->GetPointId(6) + 1 );
-		IntConverter( target, cell->GetPointId(7) + 1 );
-		break;
-	case VTK_WEDGE :
-		IntConverter( target, Material );
-		IntConverter( target, Type );
-		IntConverter( target, Real );
-		IntConverter( target, 0 );
-		IntConverter( target, 0 );
-		IntConverter( target, 0 );
-		IntConverter( target, 0 );
-		IntConverter( target, 0 );
-		IntConverter( target, 8 );
-		IntConverter( target, 0 );
-		IntConverter( target, index + 1 );
-		IntConverter( target, cell->GetPointId(0) + 1 );
-		IntConverter( target, cell->GetPointId(1) + 1 );
-		IntConverter( target, cell->GetPointId(2) + 1 );
-		IntConverter( target, cell->GetPointId(2) + 1 );
-		IntConverter( target, cell->GetPointId(3) + 1 );
-		IntConverter( target, cell->GetPointId(4) + 1 );
-		IntConverter( target, cell->GetPointId(5) + 1 );
-		IntConverter( target, cell->GetPointId(5) + 1 );
-		break;
-	case VTK_TRIANGLE :
-		IntConverter( target, Material );
-		IntConverter( target, Type );
-		IntConverter( target, Real );
-		IntConverter( target, Secnum );
-		IntConverter( target, 0 );
-		IntConverter( target, 0 );
-		IntConverter( target, 0 );
-		IntConverter( target, 0 );
-		IntConverter( target, 4 );
-		IntConverter( target, 0 );
-		IntConverter( target, index + 1 );
-		IntConverter( target, cell->GetPointId(0) + 1 );
-		IntConverter( target, cell->GetPointId(1) + 1 );
-		IntConverter( target, cell->GetPointId(2) + 1 );
-		IntConverter( target, cell->GetPointId(2) + 1 );
-		break;
-	case VTK_QUAD :
-		IntConverter( target, Material );
-		IntConverter( target, Type );
-		IntConverter( target, Real );
-		IntConverter( target, Secnum );
-		IntConverter( target, 0 );
-		IntConverter( target, 0 );
-		IntConverter( target, 0 );
-		IntConverter( target, 0 );
-		IntConverter( target, 4 );
-		IntConverter( target, 0 );
-		IntConverter( target, index + 1 );
-		IntConverter( target, cell->GetPointId(0) + 1 );
-		IntConverter( target, cell->GetPointId(1) + 1 );
-		IntConverter( target, cell->GetPointId(2) + 1 );
-		IntConverter( target, cell->GetPointId(3) + 1 );
-		break;
-	default:
-		vtkDebugMacro( << "Only VTK_TETRA, VTK_WEDGE, VTK_VOXEL, VTK_HEXAHEDRON, VTK_TRIANGLE and VTK_QUAD are supported! Mesh might be corrupt!" );
-	};
+  switch ( cell->GetCellType() )
+  {
+  case VTK_TETRA :
+    IntConverter( target, Material );
+    IntConverter( target, Type );
+    IntConverter( target, Real );
+    IntConverter( target, 0 );
+    IntConverter( target, 0 );
+    IntConverter( target, 0 );
+    IntConverter( target, 0 );
+    IntConverter( target, 0 );
+    IntConverter( target, 8 );
+    IntConverter( target, 0 );
+    IntConverter( target, index + 1 );
+    IntConverter( target, cell->GetPointId(0) + 1 );
+    IntConverter( target, cell->GetPointId(1) + 1 );
+    IntConverter( target, cell->GetPointId(2) + 1 );
+    IntConverter( target, cell->GetPointId(2) + 1 );
+    IntConverter( target, cell->GetPointId(3) + 1 );
+    IntConverter( target, cell->GetPointId(3) + 1 );
+    IntConverter( target, cell->GetPointId(3) + 1 );
+    IntConverter( target, cell->GetPointId(3) + 1 );
+    break;
+  case VTK_VOXEL :
+    IntConverter( target, Material );
+    IntConverter( target, Type );
+    IntConverter( target, Real );
+    IntConverter( target, 0 );
+    IntConverter( target, 0 );
+    IntConverter( target, 0 );
+    IntConverter( target, 0 );
+    IntConverter( target, 0 );
+    IntConverter( target, 8 );
+    IntConverter( target, 0 );
+    IntConverter( target, index + 1 );
+    IntConverter( target, cell->GetPointId(0) + 1 );
+    IntConverter( target, cell->GetPointId(1) + 1 );
+    IntConverter( target, cell->GetPointId(5) + 1 );
+    IntConverter( target, cell->GetPointId(4) + 1 );
+    IntConverter( target, cell->GetPointId(2) + 1 );
+    IntConverter( target, cell->GetPointId(3) + 1 );
+    IntConverter( target, cell->GetPointId(7) + 1 );
+    IntConverter( target, cell->GetPointId(6) + 1 );
+    break;
+  case VTK_HEXAHEDRON :
+    IntConverter( target, Material );
+    IntConverter( target, Type );
+    IntConverter( target, Real );
+    IntConverter( target, 0 );
+    IntConverter( target, 0 );
+    IntConverter( target, 0 );
+    IntConverter( target, 0 );
+    IntConverter( target, 0 );
+    IntConverter( target, 8 );
+    IntConverter( target, 0 );
+    IntConverter( target, index + 1 );
+    IntConverter( target, cell->GetPointId(0) + 1 );
+    IntConverter( target, cell->GetPointId(1) + 1 );
+    IntConverter( target, cell->GetPointId(2) + 1 );
+    IntConverter( target, cell->GetPointId(3) + 1 );
+    IntConverter( target, cell->GetPointId(4) + 1 );
+    IntConverter( target, cell->GetPointId(5) + 1 );
+    IntConverter( target, cell->GetPointId(6) + 1 );
+    IntConverter( target, cell->GetPointId(7) + 1 );
+    break;
+  case VTK_WEDGE :
+    IntConverter( target, Material );
+    IntConverter( target, Type );
+    IntConverter( target, Real );
+    IntConverter( target, 0 );
+    IntConverter( target, 0 );
+    IntConverter( target, 0 );
+    IntConverter( target, 0 );
+    IntConverter( target, 0 );
+    IntConverter( target, 8 );
+    IntConverter( target, 0 );
+    IntConverter( target, index + 1 );
+    IntConverter( target, cell->GetPointId(0) + 1 );
+    IntConverter( target, cell->GetPointId(1) + 1 );
+    IntConverter( target, cell->GetPointId(2) + 1 );
+    IntConverter( target, cell->GetPointId(2) + 1 );
+    IntConverter( target, cell->GetPointId(3) + 1 );
+    IntConverter( target, cell->GetPointId(4) + 1 );
+    IntConverter( target, cell->GetPointId(5) + 1 );
+    IntConverter( target, cell->GetPointId(5) + 1 );
+    break;
+  case VTK_TRIANGLE :
+    IntConverter( target, Material );
+    IntConverter( target, Type );
+    IntConverter( target, Real );
+    IntConverter( target, Secnum );
+    IntConverter( target, 0 );
+    IntConverter( target, 0 );
+    IntConverter( target, 0 );
+    IntConverter( target, 0 );
+    IntConverter( target, 4 );
+    IntConverter( target, 0 );
+    IntConverter( target, index + 1 );
+    IntConverter( target, cell->GetPointId(0) + 1 );
+    IntConverter( target, cell->GetPointId(1) + 1 );
+    IntConverter( target, cell->GetPointId(2) + 1 );
+    IntConverter( target, cell->GetPointId(2) + 1 );
+    break;
+  case VTK_QUAD :
+    IntConverter( target, Material );
+    IntConverter( target, Type );
+    IntConverter( target, Real );
+    IntConverter( target, Secnum );
+    IntConverter( target, 0 );
+    IntConverter( target, 0 );
+    IntConverter( target, 0 );
+    IntConverter( target, 0 );
+    IntConverter( target, 4 );
+    IntConverter( target, 0 );
+    IntConverter( target, index + 1 );
+    IntConverter( target, cell->GetPointId(0) + 1 );
+    IntConverter( target, cell->GetPointId(1) + 1 );
+    IntConverter( target, cell->GetPointId(2) + 1 );
+    IntConverter( target, cell->GetPointId(3) + 1 );
+    break;
+  default:
+    vtkDebugMacro( << "Only VTK_TETRA, VTK_WEDGE, VTK_VOXEL, VTK_HEXAHEDRON, VTK_TRIANGLE and VTK_QUAD are supported! Mesh might be corrupt!" );
+  };
 }
 
 void vtkvscAnsysCdbWriter::WriteBlocks( ostream &target, vtkFieldData * blocks, const char * name )
 {
-	vtkIdTypeArray * block = 0;
-	for ( vtkIdType i = 0; i < blocks->GetNumberOfArrays(); ++i )
-	{
-		block = vtkIdTypeArray::SafeDownCast( blocks->GetArray(i) );
-		if ( block == 0 )
-			continue;
-		this->WriteBlock( target, block, name );
-	}
+  vtkIdTypeArray * block = 0;
+  for ( vtkIdType i = 0; i < blocks->GetNumberOfArrays(); ++i )
+  {
+    block = vtkIdTypeArray::SafeDownCast( blocks->GetArray(i) );
+    if ( block == 0 )
+      continue;
+    this->WriteBlock( target, block, name );
+  }
 }
 
 void vtkvscAnsysCdbWriter::WriteBlock( ostream &target, vtkIdTypeArray * block, const char * name, int NumberOfTags, int LengthOfNumber )
 {
-	target << "CMBLOCK," << block->GetName() << "," << name << "," << block->GetNumberOfTuples() << "\n";
-	target.width(0);
-	target << "(" << NumberOfTags << "i" << LengthOfNumber << ")\n";
+  target << "CMBLOCK," << block->GetName() << "," << name << "," << block->GetNumberOfTuples() << "\n";
+  target.width(0);
+  target << "(" << NumberOfTags << "i" << LengthOfNumber << ")\n";
 
-	int Line = 0;
-	for ( vtkIdType i = 0; i <= block->GetMaxId(); ++i )
-	{
-		IntConverter( target, block->GetValue(i) + 1, LengthOfNumber );
+  int Line = 0;
+  for ( vtkIdType i = 0; i <= block->GetMaxId(); ++i )
+  {
+    IntConverter( target, block->GetValue(i) + 1, LengthOfNumber );
 
-		if ( ++Line == NumberOfTags )
-		{
-			target << "\n";
-			Line = 0;
-		}
-	}
-	if ( Line != 0 )
-		target << "\n";
+    if ( ++Line == NumberOfTags )
+    {
+      target << "\n";
+      Line = 0;
+    }
+  }
+  if ( Line != 0 )
+    target << "\n";
 }
 
 
 void vtkvscAnsysCdbWriter::WriteThicknesses( ostream &target, vtkIdTypeArray * ids, vtkDoubleArray * thinkness )
 {
-	vtkIdType NumberOfThicks = vtksys_stl::min( thinkness->GetNumberOfTuples(), ids->GetNumberOfTuples() );
-	if ( NumberOfThicks <= 0 )
-		return;
+  vtkIdType NumberOfThicks = vtksys_stl::min( thinkness->GetNumberOfTuples(), ids->GetNumberOfTuples() );
+  if ( NumberOfThicks <= 0 )
+    return;
 
-	int size = thinkness->GetNumberOfComponents();
-	vtksys_stl::vector<double> temp_array(size);
+  int size = thinkness->GetNumberOfComponents();
+  vtksys_stl::vector<double> temp_array(size);
 
-	for ( vtkIdType i = 0; i < NumberOfThicks; ++i )
-	{
-		thinkness->GetTupleValue( i, &temp_array[0] );
-		this->WriteThickness( target, ids->GetValue(i), &temp_array[0], size );
-	}
+  for ( vtkIdType i = 0; i < NumberOfThicks; ++i )
+  {
+    thinkness->GetTupleValue( i, &temp_array[0] );
+    this->WriteThickness( target, ids->GetValue(i), &temp_array[0], size );
+  }
 }
 
 void vtkvscAnsysCdbWriter::WriteThickness( ostream &target, vtkIdType id, double * thinkness, int size )
 {
-	target << "SECTYPE," << id << ",SHELL,,\n";
-	target << "SECOFFSET,MID\n";
-	target << "SECBLOCK,1\n";
-	target << thinkness[0] << ",1,0.0,3\n";
-	target << "SECCONTROLS,0.0,0.0,0.0,0.0,1.0,1.0,1.0,,,,,0.0\n";
+  target << "SECTYPE," << id << ",SHELL,,\n";
+  target << "SECOFFSET,MID\n";
+  target << "SECBLOCK,1\n";
+  target << thinkness[0] << ",1,0.0,3\n";
+  target << "SECCONTROLS,0.0,0.0,0.0,0.0,1.0,1.0,1.0,,,,,0.0\n";
 }
